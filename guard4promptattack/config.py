@@ -40,10 +40,10 @@ class GuardConfig:
     """
     canary_api_key: str = ""
     canary_base_url: str = "http://localhost:11434"
-    canary_model: str = "qwen3:0.6b"
-    total_timeout: float = 30.0
-    stream_timeout: float = 15.0
-    max_tokens: int = 1024
+    canary_model: str = "qwen3.5:9b-q4_K_M"
+    total_timeout: float = 120.0
+    stream_timeout: float = 60.0
+    max_tokens: int = 8192
     case_sensitive: bool = False
     fail_closed: bool = True
 

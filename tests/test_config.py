@@ -21,10 +21,10 @@ class TestGuardConfigDefaults:
         config = GuardConfig()
         assert config.canary_api_key == ""
         assert config.canary_base_url == "http://localhost:11434"
-        assert config.canary_model == "qwen3:0.6b"
-        assert config.total_timeout == 30.0
-        assert config.stream_timeout == 15.0
-        assert config.max_tokens == 1024
+        assert config.canary_model == "qwen3.5:9b-q4_K_M"
+        assert config.total_timeout == 120.0
+        assert config.stream_timeout == 60.0
+        assert config.max_tokens == 8192
         assert config.case_sensitive is False
         assert config.fail_closed is True
 
@@ -60,7 +60,7 @@ class TestLoadConfig:
         assert config.canary_api_key == "sk-env-key"
         # 其他字段保持默认值（本地 Ollama）
         assert config.canary_base_url == "http://localhost:11434"
-        assert config.total_timeout == 30.0
+        assert config.total_timeout == 120.0
 
     def test_load_with_override_keeps_explicit_values(self, monkeypatch):
         """验证 override 中的显式值优先于环境变量"""

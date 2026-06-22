@@ -68,6 +68,9 @@ async def stream_canary_response(
         "max_tokens": config.max_tokens,
         "temperature": 0.0,
     }
+    # Ollama 本地部署时关闭推理模式，避免推理消耗 token 导致 content 为空
+    if "localhost" in config.canary_base_url or "127.0.0.1" in config.canary_base_url:
+        payload["reasoning_effort"] = "none"
 
     # 构造超时配置
     # timeout: 请求总超时（连接 + 读取 + 写入）
