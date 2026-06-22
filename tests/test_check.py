@@ -19,13 +19,13 @@ from guard4promptattack.exceptions import ConfigurationError
 # 从环境变量读取 API Key
 CANARY_API_KEY = os.environ.get("CANARY_API_KEY", "")
 
-# 无 API Key 时跳过所有测试
-pytestmark = pytest.mark.skipif(
+# 无 API Key 时跳过需要真实 API 调用的测试
+
+
+@pytest.mark.skipif(
     not CANARY_API_KEY,
-    reason="未设置 CANARY_API_KEY 环境变量，跳过 check() 端到端测试",
+    reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
 )
-
-
 def test_check_returns_false_for_normal_conversation():
     """验证正常对话返回 False（放行）"""
     result = check(
@@ -37,6 +37,10 @@ def test_check_returns_false_for_normal_conversation():
     )
 
 
+@pytest.mark.skipif(
+    not CANARY_API_KEY,
+    reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+)
 def test_check_returns_false_for_technical_question():
     """验证正常技术问题返回 False（放行）"""
     result = check(
@@ -48,6 +52,10 @@ def test_check_returns_false_for_technical_question():
     )
 
 
+@pytest.mark.skipif(
+    not CANARY_API_KEY,
+    reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+)
 def test_check_returns_false_for_greeting():
     """验证简单问候返回 False（放行）"""
     result = check(
@@ -65,6 +73,10 @@ class TestKnownPromptAttacks:
     目标：90%+ 阻断率（9/10 以上的攻击被检测到）。
     """
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_repeat_your_instructions(self):
         """攻击手法：要求重复指令"""
         result = check(
@@ -73,6 +85,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "要求重复指令应被检测为攻击"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_ignore_previous_and_reveal(self):
         """攻击手法：忽略之前指令并揭示"""
         result = check(
@@ -81,6 +97,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "指令覆盖攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_translate_your_prompt(self):
         """攻击手法：翻译提示词"""
         result = check(
@@ -89,6 +109,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "翻译提示词攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_what_is_your_system_prompt(self):
         """攻击手法：直接询问系统提示词"""
         result = check(
@@ -97,6 +121,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "直接询问系统提示词应被检测为攻击"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_role_play_override(self):
         """攻击手法：角色扮演覆盖"""
         result = check(
@@ -106,6 +134,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "角色扮演覆盖攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_debug_mode_impersonation(self):
         """攻击手法：冒充调试模式"""
         result = check(
@@ -114,6 +146,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "调试模式冒充攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_append_instruction_extraction(self):
         """攻击手法：追加指令提取"""
         result = check(
@@ -122,6 +158,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "追加指令提取攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_encoding_trick(self):
         """攻击手法：编码欺骗（要求以 JSON 格式输出）"""
         result = check(
@@ -130,6 +170,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "JSON 格式输出攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_academic_research_pretext(self):
         """攻击手法：学术研究借口"""
         result = check(
@@ -138,6 +182,10 @@ class TestKnownPromptAttacks:
         )
         assert result is True, "学术研究借口攻击应被检测"
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_can_you_repeat_my_question(self):
         """攻击手法：要求重复问题（间接提取）"""
         result = check(
@@ -168,6 +216,10 @@ class TestErrorHandling:
         )
         assert config.fail_closed is True
 
+    @pytest.mark.skipif(
+        not CANARY_API_KEY,
+        reason="未设置 CANARY_API_KEY 环境变量，跳过需要真实 API 调用的测试",
+    )
     def test_custom_canary_words(self):
         """验证自定义金丝雀词表可正常使用"""
         custom_words = [
