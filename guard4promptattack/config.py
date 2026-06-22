@@ -39,11 +39,11 @@ class GuardConfig:
         fail_closed (bool): 异常时是否返回 True（拦截）
     """
     canary_api_key: str = ""
-    canary_base_url: str = "https://api.deepseek.com"
-    canary_model: str = "deepseek-chat"
-    total_timeout: float = 5.0
-    stream_timeout: float = 2.0
-    max_tokens: int = 128
+    canary_base_url: str = "http://localhost:11434"
+    canary_model: str = "qwen3:0.6b"
+    total_timeout: float = 30.0
+    stream_timeout: float = 15.0
+    max_tokens: int = 1024
     case_sensitive: bool = False
     fail_closed: bool = True
 

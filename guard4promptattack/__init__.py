@@ -79,12 +79,14 @@ def check(
     # ---- 步骤 1：解析配置 ----
     guard_config = load_config(config)
 
-    # 校验必填配置项：API Key 必须已配置（环境变量或参数传入）
-    if not guard_config.canary_api_key:
+    # 校验必填配置项：API Key 必须已配置（本地 Ollama 除外）
+    # Ollama 部署在 localhost 时不需要 API Key
+    if not guard_config.canary_api_key and "localhost" not in guard_config.canary_base_url:
         raise ConfigurationError(
             "金丝雀 LLM API Key 未配置。"
             "请设置环境变量 CANARY_API_KEY，"
             "或通过 GuardConfig(canary_api_key='sk-...') 传入。"
+            "若使用本地 Ollama，请设置 canary_base_url='http://localhost:11434'。"
         )
 
     # 加载金丝雀资产：参数优先，默认兜底

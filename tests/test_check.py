@@ -19,11 +19,13 @@ from guard4promptattack.exceptions import ConfigurationError
 
 
 # 从环境变量读取 API Key，CANARY_API_KEY 优先，回退到 DEEPSEEK_API_KEY
-CANARY_API_KEY = os.environ.get("CANARY_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
+# Ollama 本地部署时不需要 API Key，使用占位值
+CANARY_API_KEY = os.environ.get("CANARY_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "ollama")
 
 # 需要真实 API 调用的测试函数装饰器
+# 本地 Ollama 总是可用（检测 localhost 连通性）
 _need_api = pytest.mark.skipif(
-    not CANARY_API_KEY,
+    False,  # 本地 Ollama 部署，始终运行
     reason="未设置 CANARY_API_KEY 或 DEEPSEEK_API_KEY 环境变量",
 )
 
@@ -243,13 +245,24 @@ class TestErrorHandling:
     """测试错误处理路径（不需要真实 API Key）"""
 
     def test_missing_api_key_raises_configuration_error(self):
-        """验证显式传入空 API Key 时抛出 ConfigurationError"""
-        config = GuardConfig(
-            canary_api_key="",
-            fail_closed=True,
-        )
-        with pytest.raises(ConfigurationError, match="API Key"):
-            check("你好", config=config)
+        """验证远程 API 显式传入空 API Key + 非 localhost 时抛出 ConfigurationError"""
+        import os as _os
+        # 保存并清除可能的环境变量，确保触发 API Key 缺失检测
+        saved_canary = _os.environ.pop("CANARY_API_KEY", None)
+        saved_deepseek = _os.environ.pop("DEEPSEEK_API_KEY", None)
+        try:
+            config = GuardConfig(
+                canary_api_key="",
+                canary_base_url="https://api.deepseek.com",  # 远程 API，需要 Key
+                fail_closed=True,
+            )
+            with pytest.raises(ConfigurationError, match="API Key"):
+                check("你好", config=config)
+        finally:
+            if saved_canary is not None:
+                _os.environ["CANARY_API_KEY"] = saved_canary
+            if saved_deepseek is not None:
+                _os.environ["DEEPSEEK_API_KEY"] = saved_deepseek
 
     def test_fail_closed_default_true(self):
         """验证 fail_closed=True 配置可正常实例化"""

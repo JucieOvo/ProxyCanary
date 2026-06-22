@@ -74,6 +74,49 @@ _PATTERN_CONFIDENTIAL_CONTENT = re.compile(
     re.IGNORECASE,
 )
 
+# ============================================================
+# 英文拒绝检测模式
+# ============================================================
+# 覆盖英文模型对提示词套取的拒绝表达
+# ============================================================
+
+# 模式 E1："cannot/unable to" + 提供/透露/分享 + 系统/提示词/指令
+_PATTERN_EN_REFUSE_SYSTEM = re.compile(
+    r"(?:cannot|can not|unable to|not able to|not allowed to|won't|will not)"
+    r".{0,30}"
+    r"(?:provide|reveal|share|disclose|output|display|show|expose|divulge)"
+    r".{0,30}"
+    r"(?:system prompt|system instruction|initial prompt|initial instruction|"
+    r"internal (?:configuration|instruction|setting|information)|"
+    r"backend (?:configuration|prompt|setting)|"
+    r"original (?:prompt|instruction))",
+    re.IGNORECASE,
+)
+
+# 模式 E2：系统提示词/指令 + is/are + 保密/内部/不可公开
+_PATTERN_EN_CONFIDENTIAL = re.compile(
+    r"(?:system prompt|system instruction|initial prompt|initial instruction|"
+    r"internal (?:configuration|information|setting)|"
+    r"original (?:prompt|instruction))"
+    r".{0,30}"
+    r"(?:is|are|remain|must be|should be)"
+    r".{0,10}"
+    r"(?:confidential|internal|private|protected|not public|"
+    r"not (?:for|to be) (?:shared|disclosed|revealed|exposed))",
+    re.IGNORECASE,
+)
+
+# 模式 E3："not" + 在公开范围内 / "cannot" + 公开
+_PATTERN_EN_NOT_PUBLIC = re.compile(
+    r"(?:not|cannot be|cannot|isn't|aren't)"
+    r".{0,15}"
+    r"(?:(?:within|in|part of).{0,10})?"
+    r"(?:public|disclosable|shareable|revealable|accessible)"
+    r".{0,10}"
+    r"(?:scope|domain|range|information|content|area)",
+    re.IGNORECASE,
+)
+
 # 所有拒绝模式的列表
 # 使用 list 而非 tuple，便于后续通过方法注入扩展模式
 _REFUSAL_PATTERNS: list[tuple[str, re.Pattern]] = [
@@ -81,6 +124,9 @@ _REFUSAL_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("system_confidential", _PATTERN_SYSTEM_CONFIDENTIAL),
     ("not_public", _PATTERN_NOT_PUBLIC),
     ("confidential_content", _PATTERN_CONFIDENTIAL_CONTENT),
+    ("en_refuse_system", _PATTERN_EN_REFUSE_SYSTEM),
+    ("en_confidential", _PATTERN_EN_CONFIDENTIAL),
+    ("en_not_public", _PATTERN_EN_NOT_PUBLIC),
 ]
 
 

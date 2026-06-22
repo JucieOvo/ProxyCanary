@@ -17,14 +17,14 @@ class TestGuardConfigDefaults:
     """测试 GuardConfig 默认值"""
 
     def test_default_values(self):
-        """验证所有字段的默认值符合设计规格"""
+        """验证所有字段的默认值符合本地 Ollama 部署规格"""
         config = GuardConfig()
         assert config.canary_api_key == ""
-        assert config.canary_base_url == "https://api.deepseek.com"
-        assert config.canary_model == "deepseek-chat"
-        assert config.total_timeout == 5.0
-        assert config.stream_timeout == 2.0
-        assert config.max_tokens == 128
+        assert config.canary_base_url == "http://localhost:11434"
+        assert config.canary_model == "qwen3:0.6b"
+        assert config.total_timeout == 30.0
+        assert config.stream_timeout == 15.0
+        assert config.max_tokens == 1024
         assert config.case_sensitive is False
         assert config.fail_closed is True
 
@@ -58,9 +58,9 @@ class TestLoadConfig:
         monkeypatch.setenv("CANARY_API_KEY", "sk-env-key")
         config = load_config()
         assert config.canary_api_key == "sk-env-key"
-        # 其他字段保持默认值
-        assert config.canary_base_url == "https://api.deepseek.com"
-        assert config.total_timeout == 5.0
+        # 其他字段保持默认值（本地 Ollama）
+        assert config.canary_base_url == "http://localhost:11434"
+        assert config.total_timeout == 30.0
 
     def test_load_with_override_keeps_explicit_values(self, monkeypatch):
         """验证 override 中的显式值优先于环境变量"""

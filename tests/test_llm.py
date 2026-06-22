@@ -16,26 +16,26 @@ from guard4promptattack.canary.llm import stream_canary_response
 from guard4promptattack.exceptions import CanaryAPIError, CanaryTimeoutError
 
 
-# 从环境变量读取 API Key，不可用时跳过所有测试
-CANARY_API_KEY = os.environ.get("CANARY_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
+# 本地 Ollama 部署，不需要 API Key
+CANARY_API_KEY = os.environ.get("CANARY_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "ollama")
 
-# 使用 pytest.skip 标记：无 API Key 时跳过整个测试模块
+# 本地 Ollama 总是可用
 pytestmark = pytest.mark.skipif(
-    not CANARY_API_KEY,
+    False,
     reason="未设置 CANARY_API_KEY 环境变量，跳过金丝雀 LLM 集成测试",
 )
 
 
 @pytest.fixture
 def valid_config():
-    """提供有效的 GuardConfig 实例（使用真实 API Key）"""
+    """提供有效的 GuardConfig 实例（使用本地 Ollama）"""
     return GuardConfig(
         canary_api_key=CANARY_API_KEY,
-        canary_base_url="https://api.deepseek.com",
-        canary_model="deepseek-chat",
-        max_tokens=64,       # 测试用少量 token
-        total_timeout=10.0,
-        stream_timeout=5.0,
+        canary_base_url="http://localhost:11434",
+        canary_model="qwen3:0.6b",
+        max_tokens=1024,       # qwen3:0.6b 有思考模式，需要更多 token
+        total_timeout=60.0,
+        stream_timeout=30.0,
     )
 
 

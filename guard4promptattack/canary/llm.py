@@ -51,10 +51,10 @@ async def stream_canary_response(
     url = f"{config.canary_base_url.rstrip('/')}/v1/chat/completions"
 
     # 构造请求头
-    headers = {
-        "Authorization": f"Bearer {config.canary_api_key}",
-        "Content-Type": "application/json",
-    }
+    # 本地 Ollama 部署时不需 API Key
+    headers = {"Content-Type": "application/json"}
+    if config.canary_api_key:
+        headers["Authorization"] = f"Bearer {config.canary_api_key}"
 
     # 构造请求体
     # temperature=0 保证确定性行为
