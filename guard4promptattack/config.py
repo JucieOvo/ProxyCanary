@@ -77,9 +77,14 @@ def load_config(override: Optional[GuardConfig] = None) -> GuardConfig:
             fail_closed=override.fail_closed,
         )
     else:
-        # 无 override，使用默认值并从环境变量填充
+        # 无 override，默认值 + 环境变量填充
+        # CANARY_API_KEY 优先，回退到 DEEPSEEK_API_KEY
+        api_key = (
+            os.environ.get("CANARY_API_KEY")
+            or os.environ.get("DEEPSEEK_API_KEY", "")
+        )
         config = GuardConfig(
-            canary_api_key=os.environ.get("CANARY_API_KEY", ""),
+            canary_api_key=api_key,
         )
 
     return config

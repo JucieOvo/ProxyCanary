@@ -24,3 +24,19 @@ class MatchResult:
     matched: bool
     word: str = ""
     match_type: str = ""
+
+
+@dataclass
+class RefusalResult:
+    """
+    金丝雀 LLM 拒绝行为匹配结果。
+
+    当金丝雀 LLM 因安全训练拒绝输出系统提示词时，
+    拒绝本身即为攻击信号。RefusalDetector 命中时构造此对象。
+
+    属性：
+        matched (bool): 是否命中拒绝模式，始终为 True（仅在命中时构造）
+        pattern (str): 命中的拒绝模式标识，用于调试和日志
+    """
+    matched: bool
+    pattern: str = ""

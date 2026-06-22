@@ -3,8 +3,11 @@
 功能描述：
     Guard4PromptAttack 的公开 API 模块。
     提供 check() 函数，接收用户原始输入，返回布尔值指示是否为提示词攻击。
-    内部组装金丝雀 LLM 流式调用与流式检测器，金丝雀 LLM 回复中的任何匹配行为
-    均对攻击者不可见。
+    内部组装金丝雀 LLM 流式调用与双检测器（金丝雀词检测 + 拒绝行为检测），
+    采用三支路判定逻辑：
+        支路一：金丝雀词命中 → True（模型被套取）
+        支路二：拒绝行为命中 → True（模型安全训练拒绝，攻击信号）
+        支路三：两者均未命中 → False（正常对话）
 
 主要组件：
     - check: 核心检测函数，接收用户原始输入，返回 bool
@@ -14,10 +17,13 @@
     - guard4promptattack.exceptions: 自定义异常定义
     - guard4promptattack.canary.prompt: 默认金丝雀资产
     - guard4promptattack.canary.llm: 金丝雀 LLM 流式调用
-    - guard4promptattack.canary.detector: 流式检测器
+    - guard4promptattack.canary.detector: 流式金丝雀词检测器
+    - guard4promptattack.canary.refusal_detector: 流式拒绝行为检测器
 
 作者：JucieOvo
 创建日期：2026-06-21
+修改记录：
+    - 2026-06-23 JucieOvo: 三支路检测架构 -- 新增 RefusalDetector 双检测器并行
 """
 
 import asyncio
@@ -28,6 +34,7 @@ from .exceptions import ConfigurationError, CanaryTimeoutError, CanaryAPIError
 from .canary.prompt import DEFAULT_CANARY_PROMPT, DEFAULT_CANARY_WORDS
 from .canary.llm import stream_canary_response
 from .canary.detector import StreamDetector
+from .canary.refusal_detector import RefusalDetector
 
 __version__ = "0.1.0"
 
@@ -42,14 +49,17 @@ def check(
     """
     检测用户输入是否为提示词攻击。
 
-    内部流程：
+    内部采用三支路判定流程：
     1. 解析配置（参数传入 > 环境变量 > 默认值）
     2. 加载金丝雀资产（参数传入 > 内置默认）
-    3. 初始化流式检测器，预编译正则模式
-    4. 流式调用金丝雀 LLM，逐 chunk 喂入检测器
-    5. 任一 chunk 命中金丝雀词 → 立即返回 True
-       流正常结束无命中 → 返回 False
-       超时/API 异常 → 按 fail_closed 策略处理（默认返回 True）
+    3. 初始化双检测器：
+       - StreamDetector：预编译金丝雀词正则模式
+       - RefusalDetector：预编译拒绝行为正则模式
+    4. 流式调用金丝雀 LLM，逐 chunk 喂入两个检测器：
+       - 支路一：金丝雀词命中 → 立即返回 True（模型被套取）
+       - 支路二：拒绝行为命中 → 立即返回 True（模型拒绝，攻击信号）
+       - 支路三：流正常结束，两者均未命中 → 返回 False（正常对话）
+    5. 超时/API 异常 → 按 fail_closed 策略处理（默认返回 True）
 
     调用方使用示例：
         from guard4promptattack import check
@@ -95,17 +105,23 @@ def check(
         流正常结束 → 返回 False。
         超时/API 异常 → 按 fail_closed 策略返回。
         """
-        # 在同一协程内构造检测器，确保单线程使用（线程安全）
+        # 在同一协程内构造双检测器，确保单线程使用（线程安全）
+        # 检测器一：金丝雀词匹配 —— 检测模型被套取的情况
         detector = StreamDetector(words, case_sensitive=guard_config.case_sensitive)
+        # 检测器二：拒绝行为匹配 —— 检测模型安全训练拒绝的情况
+        refusal_detector = RefusalDetector()
         try:
             async for chunk in stream_canary_response(guard_config, prompt, user_input):
-                # 逐 chunk 喂入流式检测器
-                match_result = detector.feed(chunk)
-                if match_result is not None:
-                    # 命中金丝雀词：判定为攻击，立即返回 True
-                    # 注意：异步迭代器将在 async with 退出时自动关闭底层连接
+                # 逐 chunk 喂入金丝雀词检测器
+                if detector.feed(chunk) is not None:
+                    # 支路一：命中金丝雀词 —— 模型被套取，判定为攻击
+                    # 异步迭代器将在 async with 退出时自动关闭底层连接
                     return True
-            # 流正常结束，所有 chunk 均未命中金丝雀词：判定为安全
+                # 逐 chunk 喂入拒绝行为检测器
+                if refusal_detector.feed(chunk) is not None:
+                    # 支路二：命中拒绝模式 —— 模型拒绝输出系统提示词，判定为攻击
+                    return True
+            # 流正常结束，支路三：两个检测器均未命中 —— 判定为安全
             return False
         except (CanaryTimeoutError, CanaryAPIError):
             # 超时或 API 异常时的判定策略

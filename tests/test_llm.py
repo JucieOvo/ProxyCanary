@@ -17,7 +17,7 @@ from guard4promptattack.exceptions import CanaryAPIError, CanaryTimeoutError
 
 
 # 从环境变量读取 API Key，不可用时跳过所有测试
-CANARY_API_KEY = os.environ.get("CANARY_API_KEY", "")
+CANARY_API_KEY = os.environ.get("CANARY_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
 
 # 使用 pytest.skip 标记：无 API Key 时跳过整个测试模块
 pytestmark = pytest.mark.skipif(

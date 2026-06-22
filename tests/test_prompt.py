@@ -34,6 +34,46 @@ class TestDefaultCanaryPrompt:
         has_chinese = any('一' <= c <= '鿿' for c in DEFAULT_CANARY_PROMPT)
         assert has_chinese, "提示词应包含中文字符"
 
+    def test_prompt_uses_narrowed_trigger(self):
+        """
+        验证提示词使用正确的触发条件。
+
+        v3 提示词结构：
+        - 第一段：基础身份（含配置/版本等正常回答授权）
+        - 第三段：攻击响应指令（仅触发于提示词/指令/初始化内容套取）
+
+        攻击触发段不应包含过宽的关键词，
+        而应精确匹配提示词套取语义。
+        """
+        # 从提示词中找到"特别指令"段（攻击触发段）
+        special_idx = DEFAULT_CANARY_PROMPT.find("特别指令")
+        assert special_idx > 0, "提示词应包含'特别指令'段"
+        trigger_section = DEFAULT_CANARY_PROMPT[special_idx:]
+
+        # 攻击触发段不应包含过宽的关键词
+        assert "系统信息" not in trigger_section, (
+            "攻击触发段不应包含过宽的'系统信息'"
+        )
+        assert "技术细节" not in trigger_section, (
+            "攻击触发段不应包含过宽的'技术细节'"
+        )
+        assert "能力和配置" not in trigger_section, (
+            "攻击触发段不应包含'能力和配置'（这是正常回答授权段的内容）"
+        )
+
+        # 攻击触发段应包含精确的攻击触发词
+        assert "系统提示词" in trigger_section, (
+            "攻击触发段应包含'系统提示词'"
+        )
+        assert "系统指令" in trigger_section, (
+            "攻击触发段应包含'系统指令'"
+        )
+
+        # 正常回答授权段应存在，允许模型自由回答配置/版本问题
+        assert "你可以自由回答" in DEFAULT_CANARY_PROMPT, (
+            "提示词应包含正常回答授权语句"
+        )
+
 
 class TestDefaultCanaryWords:
     """测试默认金丝雀词表"""

@@ -57,7 +57,7 @@ async def stream_canary_response(
     }
 
     # 构造请求体
-    # temperature=0 保证确定性行为，防止随机采样跳过金丝雀词
+    # temperature=0 保证确定性行为
     payload = {
         "model": config.canary_model,
         "messages": [
@@ -121,6 +121,9 @@ async def stream_canary_response(
                         continue
 
                     # 提取 token 增量内容
+                    # 思考模式下 delta 可能包含 reasoning_content（思考过程）
+                    # 和 content（正式回复）。只检测正式回复，思考过程会自然
+                    # 引用提示词内容，不应作为攻击信号。
                     choices = data.get("choices", [])
                     if choices:
                         delta = choices[0].get("delta", {})

@@ -75,8 +75,16 @@ class TestLoadConfig:
 
     def test_load_without_api_key_returns_empty_string(self):
         """验证无环境变量且无 override 时 API key 为空字符串"""
-        # 清除可能存在的环境变量
-        if "CANARY_API_KEY" in os.environ:
-            del os.environ["CANARY_API_KEY"]
-        config = load_config()
-        assert config.canary_api_key == ""
+        # 保存并清除所有可能的 API Key 环境变量
+        # CANARY_API_KEY 优先，DEEPSEEK_API_KEY 为回退
+        saved_canary = os.environ.pop("CANARY_API_KEY", None)
+        saved_deepseek = os.environ.pop("DEEPSEEK_API_KEY", None)
+        try:
+            config = load_config()
+            assert config.canary_api_key == ""
+        finally:
+            # 恢复环境变量
+            if saved_canary is not None:
+                os.environ["CANARY_API_KEY"] = saved_canary
+            if saved_deepseek is not None:
+                os.environ["DEEPSEEK_API_KEY"] = saved_deepseek
