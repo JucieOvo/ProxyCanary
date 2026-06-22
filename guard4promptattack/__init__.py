@@ -37,7 +37,7 @@ def check(
     *,
     config: Optional[GuardConfig] = None,
     canary_prompt: Optional[str] = None,
-    canary_words: Optional[list] = None,
+    canary_words: Optional[list[dict]] = None,
 ) -> bool:
     """
     检测用户输入是否为提示词攻击。
@@ -85,10 +85,7 @@ def check(
     if not words:
         raise ConfigurationError("金丝雀词表为空，无法执行提示词攻击检测。")
 
-    # ---- 步骤 2：初始化流式检测器 ----
-    detector = StreamDetector(words, case_sensitive=guard_config.case_sensitive)
-
-    # ---- 步骤 3：异步检测逻辑 ----
+    # ---- 步骤 2：异步检测逻辑 ----
     async def _run_detection() -> bool:
         """
         金丝雀 LLM 流式调用与实时检测的内部协程。
@@ -98,6 +95,8 @@ def check(
         流正常结束 → 返回 False。
         超时/API 异常 → 按 fail_closed 策略返回。
         """
+        # 在同一协程内构造检测器，确保单线程使用（线程安全）
+        detector = StreamDetector(words, case_sensitive=guard_config.case_sensitive)
         try:
             async for chunk in stream_canary_response(guard_config, prompt, user_input):
                 # 逐 chunk 喂入流式检测器
@@ -119,7 +118,7 @@ def check(
     # ---- 步骤 4：执行异步检测并同步返回 ----
     try:
         # 检查当前线程是否已有运行中的事件循环
-        loop = asyncio.get_running_loop()
+        _ = asyncio.get_running_loop()
         # 已有事件循环（例如调用方在 FastAPI/async 上下文中使用 check()）
         # 不能在此线程中使用 asyncio.run()，需要在新线程中执行
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
