@@ -58,19 +58,16 @@ def load_config(override: Optional[GuardConfig] = None) -> GuardConfig:
     3. GuardConfig 类定义的默认值
 
     如果未提供 override，则创建全新的 GuardConfig 并从环境变量填充。
-    如果提供了 override，则以其为基础，对空字段尝试从环境变量填充。
+    如果提供了 override，则直接使用 override 中的值，不做任何环境变量回填。
 
     :param override: 调用方传入的配置覆盖实例
     :return: 合并后的 GuardConfig 实例
     """
     if override is not None:
-        # 基于 override 创建新实例，对空字段从环境变量填充
-        api_key = override.canary_api_key
-        if not api_key:
-            api_key = os.environ.get("CANARY_API_KEY", "")
-
+        # 直接使用 override 中的值，不做环境变量回填
+        # 这确保了"参数 > 环境变量 > 默认值"的优先级契约
         config = GuardConfig(
-            canary_api_key=api_key,
+            canary_api_key=override.canary_api_key,
             canary_base_url=override.canary_base_url,
             canary_model=override.canary_model,
             total_timeout=override.total_timeout,
