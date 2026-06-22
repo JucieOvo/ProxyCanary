@@ -1,0 +1,28 @@
+# Python 构建产物
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.egg
+dist/
+build/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 测试产物
+.pytest_cache/
+.coverage
+htmlcov/

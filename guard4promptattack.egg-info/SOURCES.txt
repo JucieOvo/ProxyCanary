@@ -1,8 +1,0 @@
-pyproject.toml
-guard4promptattack/__init__.py
-guard4promptattack.egg-info/PKG-INFO
-guard4promptattack.egg-info/SOURCES.txt
-guard4promptattack.egg-info/dependency_links.txt
-guard4promptattack.egg-info/requires.txt
-guard4promptattack.egg-info/top_level.txt
-guard4promptattack/canary/__init__.py
