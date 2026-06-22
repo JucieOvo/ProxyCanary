@@ -43,7 +43,7 @@ class GuardConfig:
     canary_model: str = "qwen3.5:9b-q4_K_M"
     total_timeout: float = 120.0
     stream_timeout: float = 60.0
-    max_tokens: int = 8192
+    max_tokens: int = 16384
     case_sensitive: bool = False
     fail_closed: bool = True
 

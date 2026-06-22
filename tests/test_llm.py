@@ -33,7 +33,7 @@ def valid_config():
         canary_api_key=CANARY_API_KEY,
         canary_base_url="http://localhost:11434",
         canary_model="qwen3.5:9b-q4_K_M",
-        max_tokens=2048,       # 9B 推理模式需要更多 token
+        max_tokens=16384,      # 9B 推理模式需要大量 token
         total_timeout=120.0,
         stream_timeout=60.0,
     )

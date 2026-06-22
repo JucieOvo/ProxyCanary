@@ -24,7 +24,7 @@ class TestGuardConfigDefaults:
         assert config.canary_model == "qwen3.5:9b-q4_K_M"
         assert config.total_timeout == 120.0
         assert config.stream_timeout == 60.0
-        assert config.max_tokens == 8192
+        assert config.max_tokens == 16384
         assert config.case_sensitive is False
         assert config.fail_closed is True
 
