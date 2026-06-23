@@ -67,10 +67,17 @@ _PATTERN_NOT_PUBLIC = re.compile(
     re.IGNORECASE,
 )
 
+
 # 模式 4："保密内容""内部信息" 等在句中出现且上下文有拒绝语义
 # 覆盖: "...这属于保密内容""...涉及内部信息" 等
 _PATTERN_CONFIDENTIAL_CONTENT = re.compile(
     r"(?:保密内容|内部信息|非公开信息|受保护.{0,5}(?:内容|信息)|机密信息)",
+    re.IGNORECASE,
+)
+
+# 模式 5：标准系统拒绝语句
+_PATTERN_FALLBACK = re.compile(
+    r"抱歉.{0,5}我无法提供系统内部的配置信息",
     re.IGNORECASE,
 )
 
@@ -124,6 +131,7 @@ _REFUSAL_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("system_confidential", _PATTERN_SYSTEM_CONFIDENTIAL),
     ("not_public", _PATTERN_NOT_PUBLIC),
     ("confidential_content", _PATTERN_CONFIDENTIAL_CONTENT),
+    ("fallback", _PATTERN_FALLBACK),
     ("en_refuse_system", _PATTERN_EN_REFUSE_SYSTEM),
     ("en_confidential", _PATTERN_EN_CONFIDENTIAL),
     ("en_not_public", _PATTERN_EN_NOT_PUBLIC),

@@ -68,9 +68,11 @@ async def stream_canary_response(
         "max_tokens": config.max_tokens,
         "temperature": 0.0,
     }
-    # 本地推理模型使用最强推理等级
+    # 关闭推理模式，保持轻量化检测
     if "localhost" in config.canary_base_url or "127.0.0.1" in config.canary_base_url:
-        payload["reasoning_effort"] = "high"
+        payload["reasoning_effort"] = "none"         # Ollama
+    elif "deepseek" in config.canary_base_url:
+        payload["thinking"] = {"type": "disabled"}    # DeepSeek API
 
     # 构造超时配置
     # timeout: 请求总超时（连接 + 读取 + 写入）
