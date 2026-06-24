@@ -43,6 +43,15 @@ RaccoonBench/
 # 评估原始输出
 eval_raw_*.json
 
-# 内部工具
-.superpowers/
+# 内部文档（不公开）
+docs/DESIGN.md
+docs/PLAN.md
+docs/experiment_report.md
+docs/figures_optimization_plan.md
+docs/superpowers/
+01-system-prompt-harness.md
+eval_results_*.json
+"docs/审批意见.md"
+后续投稿策略.md
+实验note.md
 
