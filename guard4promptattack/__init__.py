@@ -17,8 +17,8 @@
     - guard4promptattack.exceptions: 自定义异常定义
     - guard4promptattack.canary.prompt: 默认金丝雀资产
     - guard4promptattack.canary.llm: 金丝雀 LLM 流式调用
-    - guard4promptattack.canary.detector: 流式金丝雀词检测器
-    - guard4promptattack.canary.refusal_detector: 流式拒绝行为检测器
+    - guard4promptattack.canary.detector: 流式金丝雀词检测器 (统一泄露+拒绝)
+    - guard4promptattack.canary.refusal_detector: 流式拒绝行为检测器 (保留模块, check()已移除调用)
 
 作者：JucieOvo
 创建日期：2026-06-21
@@ -34,7 +34,6 @@ from .exceptions import ConfigurationError, CanaryTimeoutError, CanaryAPIError
 from .canary.prompt import DEFAULT_CANARY_PROMPT, DEFAULT_CANARY_WORDS
 from .canary.llm import stream_canary_response
 from .canary.detector import StreamDetector
-from .canary.refusal_detector import RefusalDetector
 
 __version__ = "0.1.0"
 
@@ -107,23 +106,18 @@ def check(
         流正常结束 → 返回 False。
         超时/API 异常 → 按 fail_closed 策略返回。
         """
-        # 在同一协程内构造双检测器，确保单线程使用（线程安全）
-        # 检测器一：金丝雀词匹配 —— 检测模型被套取的情况
+        # 在同一协程内构造检测器，确保单线程使用（线程安全）
+        # StreamDetector 统一检测：自然金丝雀词(泄露) + 标记词 No Way I Cant(拒绝)
+        # 消融证实标记词贡献 77.8% TPR，RefusalDetector 已移除
         detector = StreamDetector(words, case_sensitive=guard_config.case_sensitive)
-        # 检测器二：拒绝行为匹配 —— 检测模型安全训练拒绝的情况
-        refusal_detector = RefusalDetector()
         try:
             async for chunk in stream_canary_response(guard_config, prompt, user_input):
-                # 逐 chunk 喂入金丝雀词检测器
+                # 逐 chunk 喂入检测器
+                # 命中金丝雀词 → 模型被套取；命中 No Way I Cant → 模型拒绝
+                # 两者通过标记词统一到同一路径
                 if detector.feed(chunk) is not None:
-                    # 支路一：命中金丝雀词 —— 模型被套取，判定为攻击
-                    # 异步迭代器将在 async with 退出时自动关闭底层连接
                     return True
-                # 逐 chunk 喂入拒绝行为检测器
-                if refusal_detector.feed(chunk) is not None:
-                    # 支路二：命中拒绝模式 —— 模型拒绝输出系统提示词，判定为攻击
-                    return True
-            # 流正常结束，支路三：两个检测器均未命中 —— 判定为安全
+            # 流正常结束，所有 chunk 均未命中：判定为安全
             return False
         except (CanaryTimeoutError, CanaryAPIError):
             # 超时或 API 异常时的判定策略

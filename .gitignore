@@ -30,3 +30,19 @@ Thumbs.db
 .coverage
 htmlcov/
 RaccoonBench/
+
+# LaTeX 构建文件
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# 评估原始输出
+eval_raw_*.json
+
+# 内部工具
+.superpowers/
+
